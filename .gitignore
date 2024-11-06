@@ -13,7 +13,7 @@ vars/vault.yml
 *.tmp
 
 # Python artifacts
-venv/
+.venv/
 env/
 *.pyc
 *.pyo
