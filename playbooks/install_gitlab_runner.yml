@@ -1,0 +1,5 @@
+- name: Install runner Gitlabs Docker
+  hosts: homeserver
+  become: true
+  roles:
+    - gitlab_runner

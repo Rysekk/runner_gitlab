@@ -1,0 +1,44 @@
+# Sensitive files
+*.vault_pass.txt
+vars/vault.yml
+
+# Generated files
+*.cfg
+*.log
+*.fact
+
+# Temporary files
+*.swp
+*.bak
+*.tmp
+
+# Python artifacts
+venv/
+env/
+*.pyc
+*.pyo
+__pycache__/
+
+# Docker files
+docker-compose.override.yml
+docker-compose.yml
+
+# Ansible role files to avoid committing unnecessary files
+roles/*/tests/*
+roles/*/files/*
+roles/*/templates/*
+roles/*/vars/*
+roles/*/defaults/*
+
+# IDE-specific files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# SSH keys and known hosts
+id_rsa
+id_rsa.pub
+*.pem
+*.pub
+known_hosts

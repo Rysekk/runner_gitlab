@@ -1,0 +1,9 @@
+- name: Check if docker is installed
+  ansible.builtin.command: docker --version
+  register: docker_valid
+  ignore_errors: true
+  changed_when: docker_valid.rc != 0
+
+- name: Debug Docker Output
+  ansible.builtin.debug:
+    var: docker_valid
