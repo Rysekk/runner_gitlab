@@ -1,9 +1,61 @@
-- name: Check if docker is installed
-  ansible.builtin.command: docker --version
-  register: docker_valid
-  ignore_errors: true
-  changed_when: docker_valid.rc != 0
+# Create directories for GitLab Runner
+- name: Create directories for GitLab Runner
+  ansible.builtin.file:
+    path: /srv/gitlab-runner/{{ item }}
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - config
+    - data
+  become: true
 
-- name: Debug Docker Output
+  # Copy the Docker Compose file
+- name: Copy Docker Compose file for GitLab Runner
+  ansible.builtin.copy:
+    src: runner_docker-compose.yml
+    dest: /srv/gitlab-runner/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+  # Bring up the GitLab Runner service
+- name: Start GitLab Runner with Docker Compose
+  ansible.builtin.command:
+    cmd: docker-compose up -d
+    chdir: /srv/gitlab-runner
+  become: true
+
+- name: Debug registration variables
   ansible.builtin.debug:
-    var: docker_valid
+    msg:
+      coordinator_url: "{{ gitlab_runner_coordinator_url }}"
+      registration_token: "{{ gitlab_runner_registration_token }}"
+      executor: "{{ gitlab_runner_executor }}"
+
+ # Register the GitLab Runner
+- name: Register GitLab Runner
+  ansible.builtin.command:
+    cmd: >
+      docker run --rm -v /srv/gitlab-runner/config:/etc/gitlab-runner gitlab/gitlab-runner:latest
+      register --non-interactive
+      --url {{ gitlab_runner_coordinator_url }}
+      --registration-token {{ gitlab_runner_registration_token }}
+      --executor {{ gitlab_runner_executor }}
+      --description "Home Server Runner"
+      --tag-list "docker,home"
+      --docker-image "docker:20.10.21"
+  args:
+    creates: /srv/gitlab-runner/config/config.toml
+  become: true
+
+- name: Verify GitLab Runner container is running
+  ansible.builtin.shell: >
+    docker ps --filter "name=gitlab-runner" --format '{{ "{{" }}.Names{{ "}}" }}'
+  register: gitlab_runner_status
+
+- name: Debug GitLab Runner status
+  ansible.builtin.debug:
+    msg: "GitLab Runner container is running: {{ gitlab_runner_status.stdout }}"

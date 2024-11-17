@@ -1,0 +1,7 @@
+# Ensure Docker Compose is installed
+- name: Ensure Docker Compose is installed
+  ansible.builtin.get_url:
+    url: "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+  become: true

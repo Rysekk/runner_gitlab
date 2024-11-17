@@ -1,0 +1,62 @@
+- name: Update package
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: true
+    cache_valid_time: 3600
+
+- name: Install package
+  ansible.builtin.apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - gnupg
+
+- name: Download Docker GPG key to keyring
+  ansible.builtin.shell:
+    cmd: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+  register: docker_gpg_key
+  changed_when: docker_gpg_key.rc == 0
+
+- name: Add Docker apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]
+            https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  when: docker_gpg_key is succeeded
+
+- name: Update package index after adding Docker repo
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: docker_gpg_key is succeeded
+
+- name: Install docker engine
+  ansible.builtin.apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - software-properties-common
+      - gnupg
+
+- name: Ensure Docker service is running and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add current user to the Docker group (optional)
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: true
+
+# Ensure Docker Compose is installed
+- name: Ensure Docker Compose is installed
+  ansible.builtin.get_url:
+    url: "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+  become: true

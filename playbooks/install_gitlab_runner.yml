@@ -1,5 +1,39 @@
 - name: Install runner Gitlabs Docker
   hosts: homeserver
   become: true
-  roles:
-    - gitlab_runner
+  tasks:
+    # Step 1: Check if Docker is installed
+    - name: Check if docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_valid
+      ignore_errors: true
+      changed_when: docker_valid.rc != 0
+
+    # Step 2: Include Docker role if Docker is not installed
+    - name: Run Docker role if not installed
+      ansible.builtin.include_role:
+        name: docker
+      when: docker_valid.failed
+
+    # Step 3: Check if Docker Compose is installed
+    - name: Check if docker is installed
+      ansible.builtin.command: docker-compose --version
+      register: docker_compose_valid
+      ignore_errors: true
+      changed_when: docker_compose_valid.rc != 0
+
+    # Step 4: Include Docker Compose role if Docker Compose is not installed
+    - name: Run Docker role if not installed
+      ansible.builtin.include_role:
+        name: docker-compose
+      when: docker_compose_valid.failed
+
+    - name: Wait for Docker service to be ready
+      ansible.builtin.pause:
+        seconds: 10
+      when: docker_valid.failed
+
+    # Step 5: Include GitLab Runner role
+    - name: Run GitLab Runner role
+      ansible.builtin.include_role:
+        name: gitlab_runner
