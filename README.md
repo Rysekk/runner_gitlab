@@ -16,7 +16,7 @@ This project automates the deployment of a GitLab Runner container using Docker 
 
 ## Prerequisites
 
-- A home server accessible via SSH with:
+- A server/vm accessible via SSH with:
   - Docker installed
   - Ansible installed on the control machine
 - SSH key-based authentication or Ansible Vault for managing passwords
